@@ -1,0 +1,39 @@
+﻿{
+    "generated_at_utc":  "2026-04-24T10:39:43Z",
+    "ffprobe_available":  true,
+    "notes":  [
+                  "The URL specified for sample_official.mp4 (https://github.com/nikopueringer/CorridorKey/raw/main/CorridorKeyMp4.mp4) returned HTTP 404; no such file exists in the upstream repo (verified via GitHub API - ClipsForInference/ contains only .gitkeep).",
+                  "The URL specified for sample_extra.mp4 (https://cdn.pixabay.com/video/2019/04/24/23188-333079910_large.mp4) returned HTTP 404 on GET / 403 on HEAD even with a browser User-Agent; Pixabay CDN appears to block this environment.",
+                  "Per task guardrail (\u0027continue with whatever you have\u0027), both slots were populated from working public CC0/CC-BY sources. Clips are NOT green-screen footage but are valid H.264 MP4s suitable for pipeline smoke-testing. Original licensing/purpose noted per clip."
+              ],
+    "clips":  [
+                  {
+                      "filename":  "sample_official.mp4",
+                      "source_url":  "https://videos.pexels.com/video-files/3191572/3191572-hd_1920_1080_25fps.mp4",
+                      "original_source_url_attempted":  "https://github.com/nikopueringer/CorridorKey/raw/main/CorridorKeyMp4.mp4",
+                      "original_url_status":  "HTTP 404 (file does not exist in upstream repo)",
+                      "license":  "Pexels License (free use, attribution appreciated). Substituted because upstream CorridorKey demo clip could not be located.",
+                      "bytes":  8791842,
+                      "sha256":  "90d5d79663d4a6835f903ce9cd2c64477c0a6141463e5b0b074a0e4106b058f8",
+                      "duration_s":  24.88,
+                      "fps":  25,
+                      "width":  1920,
+                      "height":  1080,
+                      "codec":  "h264"
+                  },
+                  {
+                      "filename":  "sample_extra.mp4",
+                      "source_url":  "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4",
+                      "original_source_url_attempted":  "https://cdn.pixabay.com/video/2019/04/24/23188-333079910_large.mp4",
+                      "original_url_status":  "HTTP 404 (GET) / 403 (HEAD) - Pixabay CDN blocked",
+                      "license":  "Big Buck Bunny (c) Blender Foundation, CC-BY 3.0. Test clip mirror at test-videos.co.uk. Substituted because specified Pixabay URL was unreachable.",
+                      "bytes":  991017,
+                      "sha256":  "77145c94c11f3754207499158df22406e1fe7635553c1c86dc5e881dfeb32016",
+                      "duration_s":  10,
+                      "fps":  30,
+                      "width":  640,
+                      "height":  360,
+                      "codec":  "h264"
+                  }
+              ]
+}

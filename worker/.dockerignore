@@ -1,0 +1,18 @@
+# Keep the build context tiny
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+.git/
+.gitignore
+*.md
+!README.md
+.venv/
+*.ipynb
+.ipynb_checkpoints/
+tests/local/
+source/
+outputs/
+*.log
+*.tmp

@@ -1,0 +1,60 @@
+# Upstream / reference snapshots (cloned for inspection only)
+CorridorKey_src/
+loremax-build-worker_ref/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Model weights / large binaries baked into images, never tracked
+*.pth
+*.pt
+*.safetensors
+*.onnx
+*.ckpt
+*.bin
+BiRefNetModule/checkpoints/
+CorridorKeyModule/checkpoints/
+.huggingface/
+
+# Raw test footage — tracked via MANIFEST.json + CHECKSUMS.txt only
+source/*.mp4
+source/*.mov
+source/*.mkv
+source/*.webm
+source/*.avi
+!source/.gitkeep
+
+# Build / tmp artefacts
+_ck_job/
+tests/local/
+outputs/
+tmp/
+*.log
+*.tmp
+*.zip
+
+# Docker
+docker-build.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
