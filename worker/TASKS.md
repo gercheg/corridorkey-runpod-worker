@@ -36,8 +36,10 @@ Legend: `[ ]` pending · `[~]` in-progress · `[x]` done · `[!]` blocked.
 
 ## M4 — Serverless deploy (sequential)
 
-- [ ] **CK-13**  `docker push` to GHCR (fallback: Docker Hub)
-- [ ] **CK-14**  `runpodctl tpl create --serverless`
-- [ ] **CK-15**  `runpodctl sls create` (+ optional network volume)
-- [ ] **CK-16**  `/runsync` + `/run` smoke with `test_input.json`
-- [ ] **CK-17**  End-user README with endpoint ID, example payloads, pricing note
+- [~] **CK-13**  GHCR publish via GitHub Actions — workflow staged at `ci/docker-publish.yml.template` with manual inputs (`skip_model_prefetch`, `corridorkey_ref`). Blocked on OAuth `workflow` scope; the user or any session with `workflow` moves it to `.github/workflows/docker-publish.yml` and runs it in the UI. See `ci/README.md`.
+- [x] **CK-14**  Template `corridorkey-worker-v1` → id `4we83sqxqn`. All 7 env vars attached (see `worker/deploy/endpoint.json`). Reusable via `worker/deploy/runpodctl_deploy.ps1`.
+- [x] **CK-15**  Endpoint `corridorkey-endpoint` → id `a72mhm1kdwsvoh` on RTX 4090 / EU-RO-1, workers min 0 / max 1.
+- [~] **CK-16**  `/run` smoke hit HTTP 200 (job `c6495e50…`); worker throttled + cancelled because image is not yet on GHCR. `/health` confirms REST plane is live. Will re-run automatically once the GHA publish lands.
+- [x] **CK-17**  User-facing runbook: `worker/deploy/DEPLOY.md` + scripted path `runpodctl_deploy.ps1` / `smoke_test.ps1`; main `worker/README.md` now links to both.
+
+**M4 infrastructure status:** template + endpoint + scripts + docs all complete. Only remaining dependency is activating the GHA workflow (requires the `workflow` OAuth scope that our token lacks) so the GHCR image exists and the throttled worker can pull it.

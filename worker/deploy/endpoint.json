@@ -1,0 +1,48 @@
+{
+  "created_at_utc": "2026-04-24T12:40:00Z",
+  "template_id": "4we83sqxqn",
+  "template_name": "corridorkey-worker-v1",
+  "endpoint_id": "a72mhm1kdwsvoh",
+  "endpoint_name": "corridorkey-endpoint",
+  "gpu_id": "NVIDIA GeForce RTX 4090",
+  "gpu_count": 1,
+  "workers_min": 0,
+  "workers_max": 1,
+  "data_center_ids": "EU-RO-1",
+  "container_disk_gb": 30,
+  "image": "ghcr.io/gercheg/corridorkey-runpod-worker:latest",
+  "image_status": "PENDING — workflow at ci/docker-publish.yml.template must be activated in GitHub UI first (see ci/README.md).",
+  "runsync_url": "https://api.runpod.ai/v2/a72mhm1kdwsvoh/runsync",
+  "run_url": "https://api.runpod.ai/v2/a72mhm1kdwsvoh/run",
+  "status_url_template": "https://api.runpod.ai/v2/a72mhm1kdwsvoh/status/{jobId}",
+  "health_url": "https://api.runpod.ai/v2/a72mhm1kdwsvoh/health",
+  "env": {
+    "CORRIDORKEY_DEVICE": "auto",
+    "CORRIDORKEY_JOB_ROOT": "/tmp/corridorkey_jobs",
+    "LOG_LEVEL": "INFO",
+    "MAX_INLINE_MP4_BYTES": "83886080",
+    "OPENCV_IO_ENABLE_OPENEXR": "1",
+    "HF_HUB_DISABLE_TELEMETRY": "1",
+    "HF_HUB_ENABLE_HF_TRANSFER": "1"
+  },
+  "smoke_job_cancelled": {
+    "id": "c6495e50-acd8-4409-bf10-da237eead63e-e1",
+    "status": "CANCELLED",
+    "reason": "Image not yet published; worker throttled. Will be re-run once GHA build completes.",
+    "submitted_payload": "worker/test_input.json"
+  },
+  "health_probe_utc": "2026-04-24T12:54:11Z",
+  "health_probe_result": {
+    "jobs": { "completed": 0, "failed": 0, "inProgress": 0, "inQueue": 0, "retried": 0 },
+    "workers": { "idle": 0, "initializing": 0, "ready": 0, "running": 0, "throttled": 1, "unhealthy": 0 }
+  },
+  "redeploy_script": "worker/deploy/runpodctl_deploy.ps1",
+  "smoke_test_script": "worker/deploy/smoke_test.ps1",
+  "user_runbook": "worker/deploy/DEPLOY.md",
+  "notes": [
+    "Image tag ghcr.io/gercheg/corridorkey-runpod-worker:latest does not yet exist. Enable the GHA workflow first (ci/README.md).",
+    "Once the image is published, the throttled worker will pull and flip to ready on the next request (scale-from-zero). First cold start ~3-5 min with SKIP_MODEL_PREFETCH=1, ~60-90 s with prefetched weights.",
+    "Configure BUCKET_ENDPOINT_URL + BUCKET_NAME + AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY via `runpodctl serverless update` to offload outputs > MAX_INLINE_MP4_BYTES to S3 instead of dropping them.",
+    "Re-run the smoke test anytime with: worker\\deploy\\smoke_test.ps1 -EndpointId a72mhm1kdwsvoh"
+  ]
+}

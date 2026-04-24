@@ -192,7 +192,11 @@ docker run --rm -it --gpus all -v "$PWD:/work" \
 
 ## Deploy to RunPod Serverless
 
-The worker is a plain OCI image — any registry RunPod can pull from works (GHCR, Docker Hub, ECR, RunPod Registry).
+> **Scripted path (recommended):** run [`deploy/runpodctl_deploy.ps1`](deploy/runpodctl_deploy.ps1) on Windows / PowerShell; it creates the template and endpoint in one shot with every environment variable this worker expects. Then smoke-test via [`deploy/smoke_test.ps1`](deploy/smoke_test.ps1). Full runbook lives in [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
+>
+> **Image builds via GitHub Actions:** the workflow template lives at [`ci/docker-publish.yml.template`](../ci/docker-publish.yml.template); move it into `.github/workflows/` and trigger **Build & Publish CorridorKey Worker** manually (inputs: `skip_model_prefetch`, `corridorkey_ref`). See [`ci/README.md`](../ci/README.md) for activation steps.
+
+The worker is a plain OCI image — any registry RunPod can pull from works (GHCR, Docker Hub, ECR, RunPod Registry). Raw CLI steps for manual deploys are kept below for reference.
 
 ```bash
 # 1. Tag and push to your registry (example: GHCR).
