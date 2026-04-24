@@ -77,7 +77,7 @@ One of `video` or `frames` is required; everything else is optional. `alpha_hint
 | Field | Type | Default | Notes |
 |---|---|---|---|
 | `clip_name` | string | `clip_<uuid8>` | Name of the clip folder inside the scratch job dir. |
-| `video` | object | — | Mutually exclusive with `frames`. Accepts `url` / `base64` / `path` + optional `filename` for extension sniffing (`.mp4`, `.mov`, `.mkv`, `.webm`, `.avi`). |
+| `video` | object | — | Mutually exclusive with `frames`. Accepts `url` / `base64` / `path` + optional `filename` for extension sniffing (`.mp4`, `.mov`, `.mkv`, `.avi`). |
 | `frames` | object | — | Zip of image frames via `url`/`base64`, or a local directory via `path`. Supported image ext: `.png .jpg .jpeg .exr .tif .tiff .bmp`. |
 | `alpha_hint` | object | — | Optional pre-computed matte. `kind: "video"` (single file) or `kind: "zip"` (zip of PNG frames). |
 | `settings.alpha_source` | enum | `"auto"` | One of `auto`, `birefnet`, `gvm`, `provided`. `auto` falls back to BiRefNet when no hint was supplied. |

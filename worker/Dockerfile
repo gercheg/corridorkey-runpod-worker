@@ -42,7 +42,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # uv gives us deterministic deps + auto-managed Python 3.11.
-COPY --from=ghcr.io/astral-sh/uv:0.7 /uv /usr/local/bin/uv
+# Pin to a concrete patch so a moving :0.7 tag can't surprise us.
+COPY --from=ghcr.io/astral-sh/uv:0.7.22 /uv /usr/local/bin/uv
 RUN uv --version && uv python install ${PYTHON_VERSION}
 
 # ---------------------------------------------------------------------------
@@ -51,23 +52,27 @@ RUN uv --version && uv python install ${PYTHON_VERSION}
 FROM base AS deps
 
 ARG CORRIDORKEY_REF=main
+ARG PYTHON_VERSION
 ENV CORRIDORKEY_ROOT=/app/CorridorKey
 
 WORKDIR /app
-RUN git clone https://github.com/nikopueringer/CorridorKey.git ${CORRIDORKEY_ROOT} \
+# Retry git clone to survive transient github.com 429/TLS hiccups.
+RUN for i in 1 2 3; do \
+      git clone https://github.com/nikopueringer/CorridorKey.git ${CORRIDORKEY_ROOT} && break || sleep 5; \
+    done \
     && cd ${CORRIDORKEY_ROOT} && git checkout ${CORRIDORKEY_REF} && git rev-parse HEAD > /app/CORRIDORKEY_COMMIT
 
 WORKDIR ${CORRIDORKEY_ROOT}
 
 # CorridorKey ships a pinned uv.lock — honour it. The cuda extra installs the
 # GPU PyTorch wheels from the pytorch index declared in pyproject.toml.
+# uv resolves its managed interpreter itself; just give it the major.minor.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --extra cuda --python ${UV_PYTHON_INSTALL_DIR:-/opt/uv-python}/cpython-${PYTHON_VERSION:-3.11}-linux-x86_64-gnu/bin/python${PYTHON_VERSION:-3.11} \
-      || uv sync --frozen --no-dev --extra cuda
+    uv sync --frozen --no-dev --extra cuda --python ${PYTHON_VERSION:-3.11}
 
-# Install RunPod SDK + small helpers into the same venv that owns CorridorKey.
+# Install RunPod SDK + hf_transfer (faster HF downloads) + boto3 into the same venv.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --no-cache "runpod>=1.7,<2" requests boto3
+    uv pip install --no-cache "runpod>=1.7,<2" "hf_transfer>=0.1.6" boto3
 
 # ---------------------------------------------------------------------------
 # Stage 3: models — bake the weights into the image (optional)
@@ -77,7 +82,7 @@ FROM deps AS models
 ARG BIREFNET_USAGES="General"
 ARG SKIP_MODEL_PREFETCH=0
 ENV HF_HUB_DISABLE_TELEMETRY=1 \
-    HF_HUB_ENABLE_HF_TRANSFER=0
+    HF_HUB_ENABLE_HF_TRANSFER=1
 
 COPY download_models.py /app/download_models.py
 

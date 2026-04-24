@@ -10,10 +10,10 @@ Legend: `[ ]` pending · `[~]` in-progress · `[x]` done · `[!]` blocked.
 
 ## M1 — Scaffolding & sanity (parallel)
 
-- [ ] **CK-1** Audit `worker/` against CorridorKey sources (Auditor · `explore`)
-- [ ] **CK-2** `worker/README.md` with I/O schema, env vars, deploy guide (Scribe · `generalPurpose`)
-- [ ] **CK-3** Test green-screen clips in `source/` + checksums (Ops · `shell`)
-- [ ] **CK-4** `git init` + `.gitignore` + first commit (Ops · `shell`)
+- [x] **CK-1** Audit `worker/` vs CorridorKey: 11/12 PASS. Fix: removed `.webm` from `VIDEO_EXTS` in `pipeline.py`.
+- [x] **CK-2** `worker/README.md` (227 lines, 10 sections)
+- [x] **CK-3** `source/` populated with `sample_official.mp4` (Pexels CC0 substitute, 8.4 MB, 1920x1080@25 fps) and `sample_extra.mp4` (Big Buck Bunny CC-BY, 0.95 MB) + `CHECKSUMS.txt` + `MANIFEST.json`. Note: original URLs in plan returned 404/403; substitutes are valid MP4 but not true green-screen — OK for smoke tests, NOT for visual QA.
+- [x] **CK-4** `git init` + `.gitignore` + first commit `3d0dc0b`
 
 ## M2 — Docker build on RunPod pod (sequential)
 
