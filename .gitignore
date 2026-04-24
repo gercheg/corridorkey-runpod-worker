@@ -45,6 +45,10 @@ tmp/
 *.tmp
 *.zip
 
+# Pod-side runtime artefacts pulled down during testing — reports in
+# *_SUMMARY.md cover what matters, the raw dumps are too large to track.
+worker/artifacts/
+
 # Docker
 docker-build.log
 

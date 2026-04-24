@@ -62,6 +62,13 @@ RUN for i in 1 2 3; do \
     done \
     && cd ${CORRIDORKEY_ROOT} && git checkout ${CORRIDORKEY_REF} && git rev-parse HEAD > /app/CORRIDORKEY_COMMIT
 
+# Upstream BiRefNet wrapper hard-codes `trust_remote_code=False`, but
+# ZhengPeng7/BiRefNet ships custom modelling code. Without this flip the
+# alpha-hint generator aborts at "no AlphaHint was produced" (verified on M3).
+RUN sed -i 's/trust_remote_code=False/trust_remote_code=True/g' \
+        ${CORRIDORKEY_ROOT}/BiRefNetModule/wrapper.py \
+    && grep -n 'trust_remote_code' ${CORRIDORKEY_ROOT}/BiRefNetModule/wrapper.py
+
 WORKDIR ${CORRIDORKEY_ROOT}
 
 # CorridorKey ships a pinned uv.lock — honour it. The cuda extra installs the

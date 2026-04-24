@@ -437,7 +437,13 @@ def process_job(job_dir: Path, job_input: dict[str, Any]) -> dict[str, Any]:
     if max_frames is not None:
         max_frames = int(max_frames)
 
-    output_formats = set(settings_payload.get("output_formats") or ["comp_mp4", "comp_preview"])
+    # Accept `output_formats` inside `settings` (documented contract) OR at the
+    # top level of `job_input` (forgiving shortcut used by several call sites).
+    output_formats = set(
+        settings_payload.get("output_formats")
+        or job_input.get("output_formats")
+        or ["comp_mp4", "comp_preview"]
+    )
     unknown = output_formats - SUPPORTED_OUTPUT_FORMATS
     if unknown:
         raise JobError(f"Unknown output_formats: {sorted(unknown)}")

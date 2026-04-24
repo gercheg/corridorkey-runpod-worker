@@ -96,7 +96,7 @@ One of `video` or `frames` is required; everything else is optional. `alpha_hint
 | `settings.device` | enum | `"auto"` | Passed through `device_utils.resolve_device` — `auto`, `cuda`, `cpu`, etc. |
 | `settings.output_formats` | string[] | `["comp_mp4", "comp_preview"]` | Subset of `comp_mp4`, `comp_preview`, `fg_zip`, `matte_zip`, `processed_zip`. |
 
-**Back-compat shortcuts**: `video_url`, `video_base64`, and `video_path` at the top level are rewritten into a `video` object.
+**Back-compat shortcuts**: `video_url`, `video_base64`, and `video_path` at the top level are rewritten into a `video` object. `output_formats` is also accepted at the top level of `input` (in addition to `input.settings.output_formats`) — the top-level key wins only if `settings` does not specify one.
 
 A ready-to-run sample lives in [`test_input.json`](./test_input.json).
 
@@ -246,6 +246,8 @@ The `deps` stage runs `uv sync --frozen --no-dev --extra cuda` against the upstr
 ### `AlphaHint` missing or empty
 
 When `settings.alpha_source="provided"` but no `alpha_hint` was supplied, `_ensure_alpha` raises `JobError: alpha_source='provided' requires an explicit alpha input`. With `auto` (the default), the worker falls back to BiRefNet using `settings.birefnet_usage` (default `"General"`). If BiRefNet runs but produces no files, you'll see `Alpha generation finished but no AlphaHint was produced` — usually a sign the input was empty or the mask dilation wiped everything out. Try `"alpha_source": "gvm"` (requires the heavy GVM weights, see upstream docs) or pre-compute a rough matte and pass it via `alpha_hint`.
+
+> **Upstream defect & our fix.** Stock `BiRefNetModule/wrapper.py` calls `AutoModelForImageSegmentation.from_pretrained(..., trust_remote_code=False)`. ZhengPeng7/BiRefNet ships custom modelling code, so that call silently returns a stub and every inference ends with `no AlphaHint was produced`. The Dockerfile flips the flag to `True` via a `sed` patch in the `deps` stage. If you run outside the container, apply the same patch manually (`sed -i 's/trust_remote_code=False/trust_remote_code=True/g' BiRefNetModule/wrapper.py`).
 
 ### `ffmpeg not found` (no `comp.mp4` produced)
 
