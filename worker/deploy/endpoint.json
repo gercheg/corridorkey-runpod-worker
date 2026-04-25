@@ -32,6 +32,22 @@
         "transparent_mov": "prores / yuva444p12le / 24 frames",
         "transparent_webm": "vp9 / alpha_mode=1 / 24 frames"
       }
+    },
+    "transparent_dockerhub_smoke_job": {
+      "id": "29a2a55a-b799-4c74-affe-0e1203e30a02-e2",
+      "status": "COMPLETED",
+      "delay_ms": 65917,
+      "execution_ms": 39143,
+      "image": "gercheg/corridorkey-runpod-worker:transparent-alpha",
+      "outputs": {
+        "comp_mp4_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/29a2a55a-b799-4c74-affe-0e1203e30a02-e2/comp.mp4",
+        "transparent_mov_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/29a2a55a-b799-4c74-affe-0e1203e30a02-e2/transparent.mov",
+        "transparent_webm_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/29a2a55a-b799-4c74-affe-0e1203e30a02-e2/transparent.webm",
+        "fg_zip_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/29a2a55a-b799-4c74-affe-0e1203e30a02-e2/FG.zip",
+        "matte_zip_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/29a2a55a-b799-4c74-affe-0e1203e30a02-e2/Matte.zip",
+        "processed_zip_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/29a2a55a-b799-4c74-affe-0e1203e30a02-e2/Processed.zip",
+        "comp_preview_png_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/29a2a55a-b799-4c74-affe-0e1203e30a02-e2/comp_preview.png"
+      }
     }
   },
   "endpoint_id": "a72mhm1kdwsvoh",
@@ -43,13 +59,26 @@
   "workers_max_history": "Bumped 1в†’2 mid-deploy to clear the hung unhealthy pod from the CRLF-bug build, then restored to 1.",
   "final_health_after_large_test": {
     "checked_at_utc": "2026-04-25T13:18:00Z",
-    "jobs": { "completed": 2, "failed": 0, "inProgress": 0, "inQueue": 0, "retried": 0 },
-    "workers": { "idle": 1, "initializing": 0, "ready": 1, "running": 0, "throttled": 0, "unhealthy": 0 }
+    "jobs": {
+      "completed": 2,
+      "failed": 0,
+      "inProgress": 0,
+      "inQueue": 0,
+      "retried": 0
+    },
+    "workers": {
+      "idle": 1,
+      "initializing": 0,
+      "ready": 1,
+      "running": 0,
+      "throttled": 0,
+      "unhealthy": 0
+    }
   },
   "data_center_ids": "EU-RO-1",
   "container_disk_gb": 30,
-  "image": "ttl.sh/corridorkey-transparent-s3-675320:24h",
-  "image_status": "VERIFIED transparent-output image on ttl.sh; DockerHub push still blocked until docker login/PAT. Published temporary tag expires after 24h; push permanent DockerHub/GHCR tag before production.",
+  "image": "gercheg/corridorkey-runpod-worker:transparent-alpha",
+  "image_status": "PUBLISHED_TO_DOCKERHUB_AND_VERIFIED_ON_RUNPOD. Digest sha256:d3abe4cd1aeb215b1c338a99c7d4bccdc06372779395a82599ed0fbae0f1be05. Immutable tag: gercheg/corridorkey-runpod-worker:20260425-transparent-alpha. Latest also points to this image.",
   "image_digest_after_crlf_fix": "sha256:621c2e19accdebefc6494c59c447bc1414fdf96a2cf1aa255b56a2c7f0b6457b",
   "dockerhub_publish_attempt": {
     "target_tags": [
@@ -125,7 +154,10 @@
       "alpha_source": "birefnet",
       "birefnet_usage": "General",
       "image_size": 1024,
-      "output_formats": ["comp_mp4", "comp_preview"]
+      "output_formats": [
+        "comp_mp4",
+        "comp_preview"
+      ]
     },
     "output_bytes": {
       "comp_mp4": 5545638,

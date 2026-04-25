@@ -18,22 +18,25 @@ it was faster on the 300-frame test and about 5-6x cheaper by catalog pricing.
 
 ## Important Production Note
 
-At the time of this handoff, template `4we83sqxqn` still points at the temporary
-image:
+Template `4we83sqxqn` now points at the permanent DockerHub image:
 
 ```text
-ttl.sh/corridorkey-gercheg-984225:24h
+gercheg/corridorkey-runpod-worker:transparent-alpha
 ```
 
-For a durable Dify integration, publish the image to a permanent registry
-(DockerHub / GHCR / ECR), then update the template:
+Published tags:
 
-```powershell
-runpodctl template update 4we83sqxqn --image <permanent-image-tag>
+```text
+gercheg/corridorkey-runpod-worker:transparent-alpha
+gercheg/corridorkey-runpod-worker:20260425-transparent-alpha
+gercheg/corridorkey-runpod-worker:latest
 ```
 
-DockerHub publish was attempted but blocked by local auth:
-`insufficient_scope: authorization failed`.
+Digest:
+
+```text
+sha256:d3abe4cd1aeb215b1c338a99c7d4bccdc06372779395a82599ed0fbae0f1be05
+```
 
 Verified transparent-output smoke job:
 
@@ -53,6 +56,15 @@ Published outputs:
 - Matte zip: <https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/Matte.zip>
 - Processed zip: <https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/Processed.zip>
 - Preview PNG: <https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/comp_preview.png>
+
+DockerHub-image smoke job:
+
+```text
+job_id=29a2a55a-b799-4c74-affe-0e1203e30a02-e2
+status=COMPLETED
+delay_ms=65917
+execution_ms=39143
+```
 
 ## End-to-End Workflow
 
