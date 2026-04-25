@@ -62,6 +62,13 @@ from clip_manager import (  # noqa: E402
     run_inference,
 )
 from device_utils import resolve_device  # noqa: E402
+from transparent_video import (  # noqa: E402
+    AlphaSequenceError,
+    build_transparent_mov_command,
+    build_transparent_webm_command,
+    encode_transparent_video,
+    find_frame_sequence,
+)
 
 BIREFNET_USAGE_DEFAULT = "General"
 DEFAULT_IMAGE_SIZE = 2048
@@ -69,7 +76,15 @@ VIDEO_EXTS = (".mp4", ".mov", ".mkv", ".avi")
 IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".exr", ".tif", ".tiff", ".bmp")
 
 SUPPORTED_ALPHA_SOURCES = {"birefnet", "gvm", "provided", "auto"}
-SUPPORTED_OUTPUT_FORMATS = {"comp_mp4", "fg_zip", "matte_zip", "processed_zip", "comp_preview"}
+SUPPORTED_OUTPUT_FORMATS = {
+    "comp_mp4",
+    "transparent_mov",
+    "transparent_webm",
+    "fg_zip",
+    "matte_zip",
+    "processed_zip",
+    "comp_preview",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -358,6 +373,72 @@ def _stitch_comp_video(comp_dir: Path, fps: float, out_path: Path) -> Optional[P
     return out_path
 
 
+def _encode_transparent_outputs(
+    *,
+    fg_dir: Path,
+    matte_dir: Path,
+    fps: float,
+    out_dir: Path,
+    clip_name: str,
+    output_formats: set[str],
+) -> dict[str, Path]:
+    """Encode alpha-carrying video files from FG + Matte image sequences."""
+    outputs: dict[str, Path] = {}
+    requested = output_formats & {"transparent_mov", "transparent_webm"}
+    if not requested:
+        return outputs
+    if not shutil.which("ffmpeg"):
+        logger.warning("ffmpeg binary not found on PATH; skipping transparent video")
+        return outputs
+    if not fg_dir.exists() or not matte_dir.exists():
+        logger.warning("FG/Matte directories missing; skipping transparent video")
+        return outputs
+
+    try:
+        fg_seq = find_frame_sequence(fg_dir)
+        matte_seq = find_frame_sequence(matte_dir)
+    except AlphaSequenceError as exc:
+        logger.warning("Cannot build transparent video: %s", exc)
+        return outputs
+
+    if fg_seq.frame_count != matte_seq.frame_count:
+        logger.warning(
+            "FG/Matte frame count mismatch (%s vs %s); transparent video may be invalid",
+            fg_seq.frame_count,
+            matte_seq.frame_count,
+        )
+
+    if "transparent_mov" in requested:
+        out_path = out_dir / f"{clip_name}_transparent.mov"
+        cmd = build_transparent_mov_command(
+            fg_pattern=fg_seq.pattern_path,
+            matte_pattern=matte_seq.pattern_path,
+            fps=fps,
+            out_path=out_path,
+        )
+        logger.info("Running ffmpeg transparent MOV: %s", " ".join(cmd))
+        if encode_transparent_video(cmd):
+            outputs["transparent_mov"] = out_path
+        else:
+            logger.error("transparent_mov ffmpeg encode failed")
+
+    if "transparent_webm" in requested:
+        out_path = out_dir / f"{clip_name}_transparent.webm"
+        cmd = build_transparent_webm_command(
+            fg_pattern=fg_seq.pattern_path,
+            matte_pattern=matte_seq.pattern_path,
+            fps=fps,
+            out_path=out_path,
+        )
+        logger.info("Running ffmpeg transparent WebM: %s", " ".join(cmd))
+        if encode_transparent_video(cmd):
+            outputs["transparent_webm"] = out_path
+        else:
+            logger.error("transparent_webm ffmpeg encode failed")
+
+    return outputs
+
+
 def _probe_fps(video_path: Path, default: float = 24.0) -> float:
     if not shutil.which("ffprobe"):
         return default
@@ -506,8 +587,10 @@ def process_job(job_dir: Path, job_input: dict[str, Any]) -> dict[str, Any]:
         preview_candidates = sorted(comp_dir.glob("*.png"))
         if preview_candidates:
             results["comp_preview_png_base64"] = _file_to_base64(preview_candidates[0])
+            results["comp_preview_png_path"] = str(preview_candidates[0])
 
-    # Comp MP4 (only meaningful when source was a video)
+    # Video outputs (only meaningful when source was a video)
+    fps: float | None = None
     if "comp_mp4" in output_formats and comp_dir.exists() and clip.input_asset and clip.input_asset.type == "video":
         fps = _probe_fps(Path(clip.input_asset.path))
         comp_mp4 = out_dir / f"{clip.name}_comp.mp4"
@@ -516,21 +599,44 @@ def process_job(job_dir: Path, job_input: dict[str, Any]) -> dict[str, Any]:
             results["comp_mp4_path"] = str(comp_mp4)
             metadata["fps"] = fps
 
+    if (output_formats & {"transparent_mov", "transparent_webm"}) and clip.input_asset and clip.input_asset.type == "video":
+        fps = fps or _probe_fps(Path(clip.input_asset.path))
+        metadata["fps"] = fps
+        transparent_outputs = _encode_transparent_outputs(
+            fg_dir=fg_dir,
+            matte_dir=matte_dir,
+            fps=fps,
+            out_dir=out_dir,
+            clip_name=clip.name,
+            output_formats=output_formats,
+        )
+        mov_path = transparent_outputs.get("transparent_mov")
+        if mov_path:
+            results["transparent_mov_base64"] = _file_to_base64(mov_path)
+            results["transparent_mov_path"] = str(mov_path)
+        webm_path = transparent_outputs.get("transparent_webm")
+        if webm_path:
+            results["transparent_webm_base64"] = _file_to_base64(webm_path)
+            results["transparent_webm_path"] = str(webm_path)
+
     # Zipped sequences
     if "fg_zip" in output_formats and fg_dir.exists():
         zp = out_dir / "FG.zip"
         _zip_directory(fg_dir, zp)
         results["fg_zip_base64"] = _file_to_base64(zp)
+        results["fg_zip_path"] = str(zp)
 
     if "matte_zip" in output_formats and matte_dir.exists():
         zp = out_dir / "Matte.zip"
         _zip_directory(matte_dir, zp)
         results["matte_zip_base64"] = _file_to_base64(zp)
+        results["matte_zip_path"] = str(zp)
 
     if "processed_zip" in output_formats and proc_dir.exists():
         zp = out_dir / "Processed.zip"
         _zip_directory(proc_dir, zp)
         results["processed_zip_base64"] = _file_to_base64(zp)
+        results["processed_zip_path"] = str(zp)
 
     results["metadata"]["total_seconds"] = round(time.monotonic() - t_start, 3)
     results["output_dir"] = str(out_dir)

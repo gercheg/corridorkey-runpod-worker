@@ -115,6 +115,7 @@ ENV OPENCV_IO_ENABLE_OPENEXR=1 \
     LOG_LEVEL=INFO
 
 COPY pipeline.py /app/pipeline.py
+COPY transparent_video.py /app/transparent_video.py
 COPY rp_handler.py /app/rp_handler.py
 COPY start.sh /app/start.sh
 COPY test_input.json /app/test_input.json

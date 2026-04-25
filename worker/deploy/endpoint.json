@@ -5,15 +5,34 @@
   "template_id": "4we83sqxqn",
   "template_name": "corridorkey-worker-v1",
   "recommended_dify_endpoint": {
-    "endpoint_id": "68ik5lhd4hz97d",
-    "endpoint_name": "corridorkey-endpoint-48gb-nvidia-rtx-6000-ada-generation",
+    "endpoint_id": "ca60ckj57xfzzz",
+    "endpoint_name": "corridorkey-endpoint-48gb-rtx6000-transparent",
     "gpu_id": "NVIDIA RTX 6000 Ada Generation",
     "gpu_memory_gb": 48,
     "workers_min": 0,
     "workers_max": 1,
-    "reason": "Best speed/cost balance in 48GB comparison: 492.803s execution on the 300-frame Loremax test, estimated $0.1013-$0.1054 vs $0.5648-$0.5902 on the old H100/RTX PRO pool.",
+    "reason": "Only active CorridorKey endpoint. Clean RTX 6000 Ada 48GB endpoint running the transparent-output image with R2 URL offload. Earlier comparison endpoint 68ik5lhd4hz97d and old H100/RTX PRO endpoint a72mhm1kdwsvoh were deleted.",
     "comparison_report_url": "https://content.loremax.ai/Demos/CorridorKey/cheap48_compare_20260425/report.html",
-    "dify_plugin_docs": "worker/deploy/dify_plugin/README.md"
+    "dify_plugin_docs": "worker/deploy/dify_plugin/README.md",
+    "transparent_smoke_job": {
+      "id": "98344961-9483-49c3-a104-becd4089cc1b-e2",
+      "status": "COMPLETED",
+      "delay_ms": 9983,
+      "execution_ms": 67591,
+      "outputs": {
+        "comp_mp4_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/comp.mp4",
+        "transparent_mov_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/transparent.mov",
+        "transparent_webm_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/transparent.webm",
+        "fg_zip_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/FG.zip",
+        "matte_zip_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/Matte.zip",
+        "processed_zip_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/Processed.zip",
+        "comp_preview_png_url": "https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/comp_preview.png"
+      },
+      "verified_codecs": {
+        "transparent_mov": "prores / yuva444p12le / 24 frames",
+        "transparent_webm": "vp9 / alpha_mode=1 / 24 frames"
+      }
+    }
   },
   "endpoint_id": "a72mhm1kdwsvoh",
   "endpoint_name": "corridorkey-endpoint",
@@ -21,7 +40,7 @@
   "gpu_count": 1,
   "workers_min": 0,
   "workers_max": 1,
-  "workers_max_history": "Bumped 1→2 mid-deploy to clear the hung unhealthy pod from the CRLF-bug build, then restored to 1.",
+  "workers_max_history": "Bumped 1в†’2 mid-deploy to clear the hung unhealthy pod from the CRLF-bug build, then restored to 1.",
   "final_health_after_large_test": {
     "checked_at_utc": "2026-04-25T13:18:00Z",
     "jobs": { "completed": 2, "failed": 0, "inProgress": 0, "inQueue": 0, "retried": 0 },
@@ -29,8 +48,8 @@
   },
   "data_center_ids": "EU-RO-1",
   "container_disk_gb": 30,
-  "image": "ttl.sh/corridorkey-gercheg-984225:24h",
-  "image_status": "VERIFIED — ephemeral ttl.sh tag, expires ~2026-04-26 10:14 UTC. For permanent deployment, see deploy/DEPLOY.md (push to GHCR / Docker Hub / ECR and `runpodctl template update 4we83sqxqn --image <tag>`).",
+  "image": "ttl.sh/corridorkey-transparent-s3-675320:24h",
+  "image_status": "VERIFIED transparent-output image on ttl.sh; DockerHub push still blocked until docker login/PAT. Published temporary tag expires after 24h; push permanent DockerHub/GHCR tag before production.",
   "image_digest_after_crlf_fix": "sha256:621c2e19accdebefc6494c59c447bc1414fdf96a2cf1aa255b56a2c7f0b6457b",
   "dockerhub_publish_attempt": {
     "target_tags": [
@@ -146,7 +165,7 @@
   "smoke_test_script": "worker/deploy/smoke_test.ps1",
   "user_runbook": "worker/deploy/DEPLOY.md",
   "notes": [
-    "ttl.sh image expires automatically after 24h. Push to your own registry (GHCR/DockerHub/ECR) for production use — see deploy/DEPLOY.md.",
+    "ttl.sh image expires automatically after 24h. Push to your own registry (GHCR/DockerHub/ECR) for production use вЂ” see deploy/DEPLOY.md.",
     "GHA workflow file is staged at ci/docker-publish.yml.template. Activating it requires GitHub OAuth `workflow` scope which the assistant token did not have; activation instructions in ci/README.md.",
     "workersMax was bumped from 1 to 2 mid-deploy because the first attempted worker pod (running the buggy CRLF image) stayed in `unhealthy` state and blocked scale-up of a fresh pod.",
     "Configure BUCKET_ENDPOINT_URL + BUCKET_NAME + AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY via `runpodctl serverless update` to offload outputs > MAX_INLINE_MP4_BYTES to S3 instead of dropping them.",

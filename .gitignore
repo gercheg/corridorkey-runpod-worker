@@ -69,6 +69,11 @@ worker/deploy/cheap48_compare_report.html
 worker/deploy/build_cheap48_report.py
 worker/deploy/dify_plugin/out_*/
 
+# Transparent-output smoke-test scratch files.
+worker/deploy/.transparent*
+worker/deploy/transparent_*response.json
+worker/deploy/transparent_template_update.json
+
 # Docker
 docker-build.log
 

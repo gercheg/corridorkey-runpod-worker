@@ -17,7 +17,15 @@
       "image_size": 1024,
       "generate_comp": true,
       "device": "auto",
-      "output_formats": ["comp_mp4", "comp_preview", "fg_zip", "matte_zip", "processed_zip"]
+      "output_formats": [
+        "comp_mp4",
+        "comp_preview",
+        "transparent_mov",
+        "transparent_webm",
+        "fg_zip",
+        "matte_zip",
+        "processed_zip"
+      ]
     }
   }
 }

@@ -51,6 +51,8 @@ Output schema::
         "metadata": { ... },
         "comp_mp4_base64": "...",
         "comp_mp4_url": "https://...",              // when S3 upload is enabled
+        "transparent_mov_base64": "...",            // ProRes 4444 alpha video
+        "transparent_webm_base64": "...",           // VP9 alpha video
         "comp_preview_png_base64": "...",
         "fg_zip_base64": "...",                     // only if requested
         "matte_zip_base64": "...",
@@ -61,6 +63,7 @@ Output schema::
 from __future__ import annotations
 
 import logging
+import mimetypes
 import os
 import shutil
 import sys
@@ -104,11 +107,43 @@ def _upload_if_configured(job_id: str, local_path: str, local_key: str) -> str |
     """Try to upload to the configured S3 bucket. Returns URL or None."""
     if not BUCKET_ENDPOINT_URL:
         return None
+    bucket = os.environ.get("BUCKET_NAME", "corridorkey")
+    access_key = os.environ.get("AWS_ACCESS_KEY_ID")
+    secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    if access_key and secret_key:
+        try:
+            import boto3
+            from botocore.config import Config
+
+            prefix = os.environ.get("S3_PREFIX", "corridorkey").strip("/")
+            object_key = "/".join(part for part in (prefix, job_id, local_key) if part)
+            client = boto3.client(
+                "s3",
+                endpoint_url=BUCKET_ENDPOINT_URL,
+                aws_access_key_id=access_key,
+                aws_secret_access_key=secret_key,
+                region_name=os.environ.get("S3_REGION", "auto"),
+                config=Config(retries={"max_attempts": 5, "mode": "standard"}),
+            )
+            content_type = mimetypes.guess_type(local_path)[0] or "application/octet-stream"
+            client.upload_file(
+                local_path,
+                bucket,
+                object_key,
+                ExtraArgs={"ContentType": content_type},
+            )
+            public_base = os.environ.get("S3_PUBLIC_BASE_URL")
+            if public_base:
+                return f"{public_base.rstrip('/')}/{object_key}"
+            return f"{BUCKET_ENDPOINT_URL.rstrip('/')}/{bucket}/{object_key}"
+        except Exception as exc:
+            logger.warning("generic S3 upload failed for %s: %s", local_path, exc)
+
     try:
         url = rp_upload.upload_file_to_bucket(
             file_name=os.path.basename(local_path),
             file_location=local_path,
-            bucket_name=os.environ.get("BUCKET_NAME", "corridorkey"),
+            bucket_name=bucket,
         )
         return url
     except AttributeError:
@@ -143,25 +178,35 @@ def _maybe_externalize_outputs(job_id: str, result: dict[str, Any]) -> dict[str,
                 )
         return result
 
-    # S3 path
-    mp4_path = result.get("comp_mp4_path")
-    if mp4_path and os.path.exists(mp4_path):
-        url = _upload_if_configured(job_id, mp4_path, "comp.mp4")
-        if url:
-            result["comp_mp4_url"] = url
-            result.pop("comp_mp4_base64", None)
+    # S3 path for video payloads.
+    for base_key, path_key, filename in (
+        ("comp_mp4", "comp_mp4_path", "comp.mp4"),
+        ("transparent_mov", "transparent_mov_path", "transparent.mov"),
+        ("transparent_webm", "transparent_webm_path", "transparent.webm"),
+    ):
+        local_path = result.get(path_key)
+        if local_path and os.path.exists(local_path):
+            url = _upload_if_configured(job_id, local_path, filename)
+            if url:
+                result[f"{base_key}_url"] = url
+                result.pop(f"{base_key}_base64", None)
 
-    # Zip payloads — upload each and replace the inline base64.
-    out_dir = result.get("output_dir")
+    # Image preview and zip payloads — upload each and replace inline base64.
+    preview_path = result.get("comp_preview_png_path")
+    if preview_path and os.path.exists(preview_path):
+        url = _upload_if_configured(job_id, preview_path, "comp_preview.png")
+        if url:
+            result["comp_preview_png_url"] = url
+            result.pop("comp_preview_png_base64", None)
+
     for key, filename in (
         ("fg_zip_base64", "FG.zip"),
         ("matte_zip_base64", "Matte.zip"),
         ("processed_zip_base64", "Processed.zip"),
     ):
-        if key not in result or not out_dir:
-            continue
-        local = os.path.join(out_dir, filename)
-        if os.path.exists(local):
+        path_key = key.replace("_base64", "_path")
+        local = result.get(path_key)
+        if local and os.path.exists(local):
             url = _upload_if_configured(job_id, local, filename)
             if url:
                 result[key.replace("_base64", "_url")] = url

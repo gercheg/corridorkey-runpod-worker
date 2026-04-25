@@ -1,4 +1,4 @@
-# Dify Plugin Integration: Loremax → CorridorKey → RunPod
+# Dify Plugin Integration: Loremax -> CorridorKey -> RunPod
 
 This document is the implementation guide for a Dify plugin/tool that sends a
 video to the CorridorKey RunPod Serverless worker, waits for processing, and
@@ -7,7 +7,7 @@ returns usable final artifacts to a Dify workflow.
 Recommended production endpoint after GPU price testing:
 
 ```text
-RUNPOD_ENDPOINT_ID=68ik5lhd4hz97d
+RUNPOD_ENDPOINT_ID=ca60ckj57xfzzz
 GPU=NVIDIA RTX 6000 Ada Generation (48 GB)
 Template=4we83sqxqn
 ```
@@ -35,6 +35,25 @@ runpodctl template update 4we83sqxqn --image <permanent-image-tag>
 DockerHub publish was attempted but blocked by local auth:
 `insufficient_scope: authorization failed`.
 
+Verified transparent-output smoke job:
+
+```text
+job_id=98344961-9483-49c3-a104-becd4089cc1b-e2
+status=COMPLETED
+delay_ms=9983
+execution_ms=67591
+```
+
+Published outputs:
+
+- Preview MP4: <https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/comp.mp4>
+- Transparent ProRes MOV: <https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/transparent.mov>
+- Transparent VP9 WebM: <https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/transparent.webm>
+- FG zip: <https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/FG.zip>
+- Matte zip: <https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/Matte.zip>
+- Processed zip: <https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/Processed.zip>
+- Preview PNG: <https://content.loremax.ai/Demos/CorridorKey/runpod_outputs/98344961-9483-49c3-a104-becd4089cc1b-e2/comp_preview.png>
+
 ## End-to-End Workflow
 
 The full production workflow has three logical stages:
@@ -52,18 +71,21 @@ The full production workflow has three logical stages:
 3. **Normalize final outputs for downstream Dify nodes**
    - For normal preview / review: return `comp_mp4_url` or decode
      `comp_mp4_base64`.
-   - For alpha/transparent workflows: request `fg_zip`, `matte_zip`, and/or
-     `processed_zip` and pass those assets downstream.
+   - For alpha/transparent workflows: request `transparent_mov`,
+     `transparent_webm`, `fg_zip`, `matte_zip`, and `processed_zip`.
 
 ## What Format Does CorridorKey Return?
 
-The current worker does **not** return a single transparent video file.
+The current worker can return both browser preview video and alpha-carrying
+video files.
 
 Current available outputs:
 
 | Output | Format | Alpha? | Use |
 |---|---|---:|---|
 | `comp_mp4_base64` / `comp_mp4_url` | H.264 MP4, `yuv420p` | No | Fast preview / review / playback in browser |
+| `transparent_mov_base64` / `transparent_mov_url` | ProRes 4444 MOV, `yuva444p10le` | Yes | Production/editorial transparent video |
+| `transparent_webm_base64` / `transparent_webm_url` | VP9 WebM, `alpha_mode=1` | Yes | Browser-friendly transparent video |
 | `comp_preview_png_base64` | PNG first frame from `Output/Comp` | Depends on upstream PNG, but treat as preview | UI thumbnail |
 | `fg_zip_base64` / `fg_zip_url` | ZIP of foreground image sequence | Usually RGB/RGBA foreground | High-quality downstream compositing |
 | `matte_zip_base64` / `matte_zip_url` | ZIP of matte/alpha frames | Yes, matte data | Build transparency / masks |
@@ -81,29 +103,40 @@ Why `comp_mp4` has no transparency:
 - This is intentional because it plays everywhere, including Dify UI and
   browsers.
 
-If Dify needs a "transparent video":
+If Dify needs complete deliverables:
 
 1. Request:
 
    ```json
-   "output_formats": ["comp_mp4", "comp_preview", "fg_zip", "matte_zip"]
+   "output_formats": [
+     "comp_mp4",
+     "comp_preview",
+     "transparent_mov",
+     "transparent_webm",
+     "fg_zip",
+     "matte_zip",
+     "processed_zip"
+   ]
    ```
 
-2. Use `fg_zip` + `matte_zip` downstream to compose:
-   - ProRes 4444 `.mov`
-   - WebM VP9/AV1 with alpha
-   - PNG sequence with alpha
-   - Any compositor-specific input.
+2. Use:
+   - `comp_mp4` for preview/review.
+   - `transparent_mov` for production compositing.
+   - `transparent_webm` for browser preview with alpha.
+   - `fg_zip` + `matte_zip` for exact per-frame downstream compositing.
 
 Recommended Dify output contract:
 
 ```json
 {
   "preview_video_url": "<comp mp4 URL or uploaded decoded MP4>",
+  "transparent_video_mov_url": "<ProRes 4444 MOV URL>",
+  "transparent_video_webm_url": "<VP9 alpha WebM URL>",
   "preview_image_url": "<preview PNG URL>",
   "alpha_assets": {
     "foreground_zip_url": "<FG.zip URL>",
-    "matte_zip_url": "<Matte.zip URL>"
+    "matte_zip_url": "<Matte.zip URL>",
+    "processed_zip_url": "<Processed.zip URL>"
   },
   "metadata": {
     "frame_count": 300,
@@ -182,9 +215,10 @@ File:
 worker/deploy/dify_plugin/payloads/basic_comp_payload.json
 ```
 
-## Payload Sent to RunPod (Alpha Assets)
+## Payload Sent to RunPod (Final Deliverables)
 
-Use this when Dify needs matte/foreground data for transparency:
+Use this when Dify needs the full final package: preview MP4, transparent MOV,
+transparent WebM, and all zip sequences.
 
 ```json
 {
@@ -206,7 +240,15 @@ Use this when Dify needs matte/foreground data for transparency:
       "image_size": 1024,
       "generate_comp": true,
       "device": "auto",
-      "output_formats": ["comp_mp4", "comp_preview", "fg_zip", "matte_zip", "processed_zip"]
+      "output_formats": [
+        "comp_mp4",
+        "comp_preview",
+        "transparent_mov",
+        "transparent_webm",
+        "fg_zip",
+        "matte_zip",
+        "processed_zip"
+      ]
     }
   }
 }
@@ -246,7 +288,7 @@ Recommended output schema:
 {
   "status": "success",
   "runpod": {
-    "endpoint_id": "68ik5lhd4hz97d",
+    "endpoint_id": "ca60ckj57xfzzz",
     "job_id": "...",
     "delay_ms": 112687,
     "execution_ms": 492803
@@ -296,7 +338,7 @@ Smoke preview run:
 ```powershell
 $env:RUNPOD_API_KEY = "<runpod-api-key>"
 python worker\deploy\dify_plugin\runpod_corridorkey_client.py `
-  --endpoint-id 68ik5lhd4hz97d `
+  --endpoint-id ca60ckj57xfzzz `
   --payload worker\deploy\dify_plugin\payloads\basic_comp_payload.json `
   --output-dir worker\deploy\dify_plugin\out_preview
 ```
@@ -306,7 +348,7 @@ Alpha-assets run:
 ```powershell
 $env:RUNPOD_API_KEY = "<runpod-api-key>"
 python worker\deploy\dify_plugin\runpod_corridorkey_client.py `
-  --endpoint-id 68ik5lhd4hz97d `
+  --endpoint-id ca60ckj57xfzzz `
   --payload worker\deploy\dify_plugin\payloads\alpha_assets_payload.json `
   --output-dir worker\deploy\dify_plugin\out_alpha
 ```
@@ -315,7 +357,7 @@ Dynamic payload:
 
 ```powershell
 python worker\deploy\dify_plugin\runpod_corridorkey_client.py `
-  --endpoint-id 68ik5lhd4hz97d `
+  --endpoint-id ca60ckj57xfzzz `
   --video-url "https://content.loremax.ai/path/to/video.mp4" `
   --alpha-assets `
   --output-dir worker\deploy\dify_plugin\out_dynamic
@@ -332,7 +374,7 @@ Recommended Dify workflow:
    - Builds JSON from `video_url`, `mode`, and quality parameters.
 
 3. **HTTP/tool node: submit RunPod**
-   - `POST https://api.runpod.ai/v2/68ik5lhd4hz97d/run`
+   - `POST https://api.runpod.ai/v2/ca60ckj57xfzzz/run`
    - Body: payload above.
    - Save `job_id = response.id`.
 
@@ -340,7 +382,7 @@ Recommended Dify workflow:
    - Every `15-30s`, call:
 
      ```text
-     GET https://api.runpod.ai/v2/68ik5lhd4hz97d/status/{job_id}
+     GET https://api.runpod.ai/v2/ca60ckj57xfzzz/status/{job_id}
      ```
 
    - Stop when status is `COMPLETED`, `FAILED`, or `CANCELLED`.
@@ -363,7 +405,7 @@ Handle these cases explicitly:
 | `/run` has no `id` | Invalid RunPod response | Fail node with raw response |
 | `status=FAILED` | Worker raised error | Surface `output.error` / `traceback` if present |
 | `status=CANCELLED` | Job cancelled or endpoint capacity issue | Retry on same endpoint once, then fail |
-| `workers.throttled=1` | No capacity for selected GPU | Retry later or fallback to old endpoint |
+| `workers.throttled=1` | No capacity for selected GPU | Retry later; old expensive fallback endpoint has been deleted |
 | `comp_mp4_base64` missing | Output too large and S3 offload not configured | Request alpha assets or configure S3 offload |
 
 ## Endpoint Choice
@@ -372,13 +414,13 @@ Handle these cases explicitly:
 
 | GPU | Endpoint | Execution | Cost estimate |
 |---|---|---:|---:|
-| RTX 6000 Ada 48GB | `68ik5lhd4hz97d` | `492.803s` | `$0.1013-$0.1054` |
+| RTX 6000 Ada 48GB | `ca60ckj57xfzzz` | `492.803s` | `$0.1013-$0.1054` |
 | L40S 48GB | deleted | `535.696s` | `$0.1176-$0.1280` |
 | RTX A6000 48GB | deleted | `615.544s` | `$0.0564-$0.0838` |
 | A40 48GB | deleted | throttled | n/a |
-| H100 / RTX PRO pool | `a72mhm1kdwsvoh` | `508.810s` | `$0.5648-$0.5902` |
+| H100 / RTX PRO pool (deleted) | `a72mhm1kdwsvoh` | `508.810s` | `$0.5648-$0.5902` |
 
-Keep `68ik5lhd4hz97d` as default. Use the old endpoint only as a fallback.
+Keep `ca60ckj57xfzzz` as default. The old H100/RTX PRO endpoint has been deleted; this is now the only active CorridorKey endpoint.
 
 ## CI/CD Handoff
 
@@ -405,7 +447,7 @@ Production release sequence:
 4. Smoke-test:
 
    ```powershell
-   worker\deploy\smoke_test.ps1 -EndpointId 68ik5lhd4hz97d
+   worker\deploy\smoke_test.ps1 -EndpointId ca60ckj57xfzzz
    ```
 
-5. Point Dify plugin env `RUNPOD_ENDPOINT_ID` to `68ik5lhd4hz97d`.
+5. Point Dify plugin env `RUNPOD_ENDPOINT_ID` to `ca60ckj57xfzzz`.

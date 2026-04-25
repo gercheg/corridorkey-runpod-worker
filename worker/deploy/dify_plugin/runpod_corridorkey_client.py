@@ -17,7 +17,7 @@ from typing import Any
 import requests
 
 
-DEFAULT_ENDPOINT_ID = "68ik5lhd4hz97d"  # RTX 6000 Ada 48GB endpoint.
+DEFAULT_ENDPOINT_ID = "ca60ckj57xfzzz"  # RTX 6000 Ada 48GB transparent-output endpoint.
 
 
 class RunPodError(RuntimeError):
@@ -81,6 +81,8 @@ def decode_outputs(result: dict[str, Any], output_dir: Path) -> dict[str, str]:
 
     mapping = {
         "comp_mp4_base64": "comp.mp4",
+        "transparent_mov_base64": "transparent.mov",
+        "transparent_webm_base64": "transparent.webm",
         "comp_preview_png_base64": "comp_preview.png",
         "fg_zip_base64": "FG.zip",
         "matte_zip_base64": "Matte.zip",
@@ -141,7 +143,11 @@ def main() -> int:
     parser.add_argument("--video-url", help="Input video URL")
     parser.add_argument("--payload", type=Path, help="Existing JSON payload file")
     parser.add_argument("--output-dir", type=Path, default=Path("corridorkey_out"))
-    parser.add_argument("--alpha-assets", action="store_true", help="Request FG/Matte/Processed zip outputs")
+    parser.add_argument(
+        "--alpha-assets",
+        action="store_true",
+        help="Request transparent MOV/WebM plus FG/Matte/Processed zip outputs",
+    )
     parser.add_argument("--max-frames", type=int)
     args = parser.parse_args()
 
@@ -153,7 +159,7 @@ def main() -> int:
     elif args.video_url:
         formats = ["comp_mp4", "comp_preview"]
         if args.alpha_assets:
-            formats += ["fg_zip", "matte_zip", "processed_zip"]
+            formats += ["transparent_mov", "transparent_webm", "fg_zip", "matte_zip", "processed_zip"]
         payload = build_payload(args.video_url, output_formats=formats, max_frames=args.max_frames)
     else:
         raise SystemExit("Provide either --payload or --video-url")
