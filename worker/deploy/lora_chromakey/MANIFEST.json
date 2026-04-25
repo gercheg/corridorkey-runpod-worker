@@ -1,0 +1,113 @@
+{
+  "created_at_utc": "2026-04-25T15:51:28Z",
+  "purpose": "Reproduce and re-upload the Lora green-screen gameplay video generation and CorridorKey pass.",
+  "character": {
+    "name": "Lora",
+    "reference_id": 8406,
+    "reference_url": "https://content.loremax.ai/Prompt_v2/Core_Images/characters/girl_artist/core_girl_2.webp"
+  },
+  "loremax": {
+    "organization": "Core",
+    "balance_before": 1826681,
+    "balance_after_estimated": 1825353,
+    "start_frame": {
+      "workflow": "Loremax_Image_Scene_builder",
+      "generation_id": "161414",
+      "token_cost": 33,
+      "raw_url": "https://content.loremax.ai/data/2026/04/25/CjWufTko6YDd.png",
+      "corrected_pure_green_url": "https://content.loremax.ai/Demos/CorridorKey/lora_chromakey/lora_start_frame_pure_green.png",
+      "notes": [
+        "Raw generation returned a dark green studio background, not pure #00FF00.",
+        "The committed workflow normalizes the border-connected green area to exact #00FF00 before I2V.",
+        "Local binary lora_start_frame_pure_green_flood.png is intentionally ignored; the CDN URL above is the source of truth."
+      ]
+    },
+    "video": {
+      "workflow": "Loremax_Video_Scene_builder",
+      "generation_id": "161419",
+      "token_cost": 1295,
+      "mode_name": "Seedance",
+      "model_type": "standard",
+      "duration": 6,
+      "aspect_ratio": "9:16",
+      "need_audio": "false",
+      "need_multi_prompt": "false",
+      "input_image_url": "https://content.loremax.ai/Demos/CorridorKey/lora_chromakey/lora_start_frame_pure_green.png",
+      "video_url": "https://content.loremax.ai/data/2026/04/25/0DCiSFABlxtB.mp4",
+      "probe": {
+        "codec": "h264",
+        "width": 720,
+        "height": 1280,
+        "frames": 145,
+        "fps": 24,
+        "duration_s": 6.06,
+        "size_bytes": 2734147,
+        "bit_rate": 3609434
+      }
+    },
+    "total_token_cost": 1328
+  },
+  "corridorkey": {
+    "endpoint_id": "a72mhm1kdwsvoh",
+    "template_id": "4we83sqxqn",
+    "job_id": "8c173785-1969-49c6-a8c3-5d9c7b0d1b57-e2",
+    "status": "COMPLETED",
+    "delay_ms": 12063,
+    "execution_ms": 105819,
+    "input_url": "https://content.loremax.ai/data/2026/04/25/0DCiSFABlxtB.mp4",
+    "settings": {
+      "alpha_source": "birefnet",
+      "birefnet_usage": "General",
+      "birefnet_dilate": 0,
+      "despill_strength": 0.55,
+      "auto_despeckle": true,
+      "despeckle_size": 350,
+      "refiner_scale": 1.0,
+      "image_size": 1024,
+      "output_formats": ["comp_mp4", "comp_preview"]
+    },
+    "metadata": {
+      "frame_count": 145,
+      "alpha_frames": 145,
+      "input_frames": 145,
+      "fps": 24,
+      "device": "cuda",
+      "inference_seconds": 86.014,
+      "total_seconds": 105.085
+    },
+    "output": {
+      "comp_mp4_url": "https://content.loremax.ai/Demos/CorridorKey/lora_chromakey/lora_corridorkey_comp.mp4",
+      "preview_png_url": "https://content.loremax.ai/Demos/CorridorKey/lora_chromakey/lora_corridorkey_preview.png",
+      "comp_mp4_probe": {
+        "codec": "h264",
+        "width": 720,
+        "height": 1280,
+        "frames": 145,
+        "duration_s": 6.041667,
+        "size_bytes": 1762267,
+        "bit_rate": 2333484
+      }
+    },
+    "runpod_cost_estimate_usd": {
+      "assumptions": {
+        "80_gb_pro_per_second": 0.00116,
+        "96_gb_per_second": 0.00111,
+        "workers": 1
+      },
+      "execution_only": {
+        "80_gb_pro": 0.12275,
+        "96_gb": 0.11746
+      },
+      "delay_plus_execution": {
+        "80_gb_pro": 0.13675,
+        "96_gb": 0.13085
+      }
+    }
+  },
+  "cdn_urls_verified": [
+    "https://content.loremax.ai/Demos/CorridorKey/lora_chromakey/lora_start_frame_pure_green.png",
+    "https://content.loremax.ai/data/2026/04/25/0DCiSFABlxtB.mp4",
+    "https://content.loremax.ai/Demos/CorridorKey/lora_chromakey/lora_corridorkey_comp.mp4",
+    "https://content.loremax.ai/Demos/CorridorKey/lora_chromakey/lora_corridorkey_preview.png"
+  ]
+}

@@ -1,6 +1,7 @@
 {
   "created_at_utc": "2026-04-24T12:40:00Z",
   "verified_at_utc": "2026-04-25T10:36:05Z",
+  "large_loremax_test_verified_at_utc": "2026-04-25T13:14:59Z",
   "template_id": "4we83sqxqn",
   "template_name": "corridorkey-worker-v1",
   "endpoint_id": "a72mhm1kdwsvoh",
@@ -10,11 +11,26 @@
   "workers_min": 0,
   "workers_max": 1,
   "workers_max_history": "Bumped 1→2 mid-deploy to clear the hung unhealthy pod from the CRLF-bug build, then restored to 1.",
+  "final_health_after_large_test": {
+    "checked_at_utc": "2026-04-25T13:18:00Z",
+    "jobs": { "completed": 2, "failed": 0, "inProgress": 0, "inQueue": 0, "retried": 0 },
+    "workers": { "idle": 1, "initializing": 0, "ready": 1, "running": 0, "throttled": 0, "unhealthy": 0 }
+  },
   "data_center_ids": "EU-RO-1",
   "container_disk_gb": 30,
   "image": "ttl.sh/corridorkey-gercheg-984225:24h",
   "image_status": "VERIFIED — ephemeral ttl.sh tag, expires ~2026-04-26 10:14 UTC. For permanent deployment, see deploy/DEPLOY.md (push to GHCR / Docker Hub / ECR and `runpodctl template update 4we83sqxqn --image <tag>`).",
   "image_digest_after_crlf_fix": "sha256:621c2e19accdebefc6494c59c447bc1414fdf96a2cf1aa255b56a2c7f0b6457b",
+  "dockerhub_publish_attempt": {
+    "target_tags": [
+      "gercheg/corridorkey-runpod-worker:latest",
+      "gercheg/corridorkey-runpod-worker:20260425-crlf-e2e"
+    ],
+    "status": "BLOCKED_BY_DOCKERHUB_AUTH",
+    "error": "docker push returned `insufficient_scope: authorization failed`; local Docker credential helpers had no DockerHub credentials, and `docker login` cannot run interactively from this non-TTY shell.",
+    "local_image_id": "621c2e19accd",
+    "next_step": "Run `docker login` (or provide a DockerHub PAT via `docker login --username <user> --password-stdin`) and then push the two tags above; after that, `runpodctl template update 4we83sqxqn --image gercheg/corridorkey-runpod-worker:20260425-crlf-e2e`."
+  },
   "runsync_url": "https://api.runpod.ai/v2/a72mhm1kdwsvoh/runsync",
   "run_url": "https://api.runpod.ai/v2/a72mhm1kdwsvoh/run",
   "status_url_template": "https://api.runpod.ai/v2/a72mhm1kdwsvoh/status/{jobId}",
@@ -57,6 +73,57 @@
       "image_size": 1024,
       "inference_seconds": 5.485,
       "total_seconds": 29.25
+    }
+  },
+  "verified_large_loremax_job": {
+    "id": "2410a3d5-0437-4225-911a-17d74f19341b-e2",
+    "status": "COMPLETED",
+    "delay_ms": 12224,
+    "execution_ms": 508810,
+    "completed_at_utc": "2026-04-25T13:14:59Z",
+    "input_url": "https://content.loremax.ai/data/2026/04/08/iC9PX90tXlsL.mp4",
+    "input_probe": {
+      "content_length_bytes": 66286180,
+      "codec": "h264",
+      "width": 1076,
+      "height": 1926,
+      "frames": 300,
+      "duration_s": 10.030998,
+      "bit_rate": 52865072
+    },
+    "settings": {
+      "alpha_source": "birefnet",
+      "birefnet_usage": "General",
+      "image_size": 1024,
+      "output_formats": ["comp_mp4", "comp_preview"]
+    },
+    "output_bytes": {
+      "comp_mp4": 5545638,
+      "comp_preview_png": 376429
+    },
+    "ffprobe_comp_mp4": {
+      "codec": "h264",
+      "width": 1076,
+      "height": 1926,
+      "frames": 300,
+      "duration_s": 10.0,
+      "bit_rate": 4436510
+    },
+    "metadata": {
+      "frame_count": 300,
+      "alpha_frames": 300,
+      "input_frames": 300,
+      "fps": 30,
+      "device": "cuda",
+      "alpha_source": "birefnet",
+      "image_size": 1024,
+      "inference_seconds": 469.027,
+      "total_seconds": 507.774
+    },
+    "saved_to": "worker/deploy/big_loremax_out/",
+    "published_urls": {
+      "comp_mp4": "https://content.loremax.ai/Demos/CorridorKey/runpod_serverless_big_20260425/corridorkey_big_comp.mp4",
+      "comp_preview_png": "https://content.loremax.ai/Demos/CorridorKey/runpod_serverless_big_20260425/corridorkey_big_preview.png"
     }
   },
   "image_pull_seconds_observed": 103,
