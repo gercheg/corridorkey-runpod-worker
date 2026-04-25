@@ -1,0 +1,23 @@
+{
+  "input": {
+    "clip_name": "dify_corridorkey_comp_example",
+    "video": {
+      "url": "https://content.loremax.ai/data/2026/04/08/iC9PX90tXlsL.mp4",
+      "filename": "input.mp4"
+    },
+    "settings": {
+      "alpha_source": "birefnet",
+      "birefnet_usage": "General",
+      "birefnet_dilate": 0,
+      "input_is_linear": false,
+      "despill_strength": 0.5,
+      "auto_despeckle": true,
+      "despeckle_size": 400,
+      "refiner_scale": 1.0,
+      "image_size": 1024,
+      "generate_comp": true,
+      "device": "auto",
+      "output_formats": ["comp_mp4", "comp_preview"]
+    }
+  }
+}

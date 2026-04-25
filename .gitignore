@@ -61,6 +61,14 @@ worker/deploy/lora_chromakey/*
 !worker/deploy/lora_chromakey/README.md
 !worker/deploy/lora_chromakey/reupload_artifacts.ps1
 
+# One-off GPU price comparison raw responses and decoded media. The selected
+# endpoint and timings are documented in dify_plugin/README.md.
+worker/deploy/cheap48_*.json
+worker/deploy/cheap48_compare/
+worker/deploy/cheap48_compare_report.html
+worker/deploy/build_cheap48_report.py
+worker/deploy/dify_plugin/out_*/
+
 # Docker
 docker-build.log
 

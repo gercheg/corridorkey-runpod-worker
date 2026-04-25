@@ -4,6 +4,17 @@
   "large_loremax_test_verified_at_utc": "2026-04-25T13:14:59Z",
   "template_id": "4we83sqxqn",
   "template_name": "corridorkey-worker-v1",
+  "recommended_dify_endpoint": {
+    "endpoint_id": "68ik5lhd4hz97d",
+    "endpoint_name": "corridorkey-endpoint-48gb-nvidia-rtx-6000-ada-generation",
+    "gpu_id": "NVIDIA RTX 6000 Ada Generation",
+    "gpu_memory_gb": 48,
+    "workers_min": 0,
+    "workers_max": 1,
+    "reason": "Best speed/cost balance in 48GB comparison: 492.803s execution on the 300-frame Loremax test, estimated $0.1013-$0.1054 vs $0.5648-$0.5902 on the old H100/RTX PRO pool.",
+    "comparison_report_url": "https://content.loremax.ai/Demos/CorridorKey/cheap48_compare_20260425/report.html",
+    "dify_plugin_docs": "worker/deploy/dify_plugin/README.md"
+  },
   "endpoint_id": "a72mhm1kdwsvoh",
   "endpoint_name": "corridorkey-endpoint",
   "gpu_id": "NVIDIA GeForce RTX 4090",

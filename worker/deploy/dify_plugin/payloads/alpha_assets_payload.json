@@ -1,0 +1,23 @@
+{
+  "input": {
+    "clip_name": "dify_corridorkey_alpha_assets_example",
+    "video": {
+      "url": "https://content.loremax.ai/data/2026/04/25/0DCiSFABlxtB.mp4",
+      "filename": "lora_chromakey_gameplay.mp4"
+    },
+    "settings": {
+      "alpha_source": "birefnet",
+      "birefnet_usage": "General",
+      "birefnet_dilate": 0,
+      "input_is_linear": false,
+      "despill_strength": 0.55,
+      "auto_despeckle": true,
+      "despeckle_size": 350,
+      "refiner_scale": 1.0,
+      "image_size": 1024,
+      "generate_comp": true,
+      "device": "auto",
+      "output_formats": ["comp_mp4", "comp_preview", "fg_zip", "matte_zip", "processed_zip"]
+    }
+  }
+}
