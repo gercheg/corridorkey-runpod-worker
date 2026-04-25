@@ -181,27 +181,37 @@ The workflow is re-runnable. To redeploy:
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
 | `workers: throttled` forever | Image tag does not exist or is private | Re-run GHA workflow / make package public |
+| `workers: unhealthy=1` immediately after first `/run`, `/stream` empty | `start.sh` checked out with CRLF on Windows → container exits with `/usr/bin/env: 'bash\r': No such file or directory` | Both fixes are already in the repo (`Dockerfile` strips CRLF + repo-level `.gitattributes` enforces LF). If you regress, re-apply the `sed -i 's/\r$//' /app/start.sh` step. |
 | `AlphaHint was produced` failures | Old image without the `trust_remote_code=True` patch | Rebuild — `Dockerfile` applies the `sed` patch in the `deps` stage |
 | `output_formats` missing | Older `rp_handler.py` contract | Update worker to >= commit `9177bc9` (accepts top-level and nested `output_formats`) |
 | First job times out | Cold start longer than client timeout | Use `/run` + `/status` polling, or set `WorkersMin=1` (always-on) |
 | `comp.mp4` missing from response | File bigger than `MAX_INLINE_MP4_BYTES` | Configure S3 offload (§4) or reduce `max_frames` / `scene_size_px` |
+| `unhealthy=1` worker won't recycle, blocks new jobs | RunPod won't auto-replace until cooldown expires | Bump `workersMax` by 1 via `PATCH https://rest.runpod.io/v1/endpoints/<id>` so a fresh pod can spawn alongside, then drop it back. |
 
 ---
 
 ## 7. Current deploy status (this repo)
 
-As of the latest local run (`worker/deploy/endpoint.json`):
+As of `2026-04-25T10:36 UTC` (`worker/deploy/endpoint.json`, full payload preserved there):
 
 - Template `corridorkey-worker-v1` → id `4we83sqxqn`
-- Endpoint `corridorkey-endpoint` → id `a72mhm1kdwsvoh`
-- Image `ghcr.io/gercheg/corridorkey-runpod-worker:latest` — **not yet
-  published**; workflow activation is waiting for a push with `workflow`
-  OAuth scope (see `ci/README.md`).
-- `/health` confirms the endpoint is reachable:
+- Endpoint `corridorkey-endpoint` → id `a72mhm1kdwsvoh`, RTX 4090 / EU-RO-1, workersMin=0 / workersMax=2.
+- Image **VERIFIED** end-to-end: built locally, pushed to anonymous
+  `ttl.sh/corridorkey-gercheg-984225:24h` (digest `sha256:621c2e19…`),
+  picked up by RunPod, processed a real job successfully.
+- Smoke job `ea490cb0-ae8a-45ab-9deb-4fe0e8a47f87-e2`:
 
-  ```json
-  { "jobs": {"inQueue": 0}, "workers": {"throttled": 1} }
-  ```
+  | Phase | Time |
+  |-------|------|
+  | Image pull (cold) | 103 s |
+  | Queue → `IN_PROGRESS` | 177.3 s |
+  | In-handler execution | 29.35 s |
+  | Pure inference (6 frames @ 1024 px, BiRefNet General, 4090) | 5.485 s |
 
-  The `throttled` worker is RunPod back-pressuring because image pull
-  fails. As soon as the image exists it will flip to `ready`.
+  Output `comp_mp4` (h264 640×360, 6 frames, 3369 B) and `comp_preview_png`
+  (5398 B) decoded into `worker/deploy/smoke_out/`.
+
+> The `ttl.sh` tag **expires automatically ~24 h after push**. For
+> permanent deployment, activate the GHA workflow (`ci/README.md`) or
+> push to your own GHCR / Docker Hub / ECR / RunPod-private registry,
+> then `runpodctl template update 4we83sqxqn --image <your-tag>`.

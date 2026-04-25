@@ -253,6 +253,8 @@ When `settings.alpha_source="provided"` but no `alpha_hint` was supplied, `_ensu
 
 > **Upstream defect & our fix.** Stock `BiRefNetModule/wrapper.py` calls `AutoModelForImageSegmentation.from_pretrained(..., trust_remote_code=False)`. ZhengPeng7/BiRefNet ships custom modelling code, so that call silently returns a stub and every inference ends with `no AlphaHint was produced`. The Dockerfile flips the flag to `True` via a `sed` patch in the `deps` stage. If you run outside the container, apply the same patch manually (`sed -i 's/trust_remote_code=False/trust_remote_code=True/g' BiRefNetModule/wrapper.py`).
 
+> **Windows checkout gotcha.** `start.sh` must have LF line endings — a CRLF copy crashes the container with `/usr/bin/env: 'bash\r': No such file or directory`, RunPod marks the worker `unhealthy`, and your job hangs in `IN_QUEUE`. Defended in two places: the Dockerfile runs `sed -i 's/\r$//' /app/start.sh` after the `COPY`, and the repo-root `.gitattributes` forces `*.sh`, `*.bash`, and `Dockerfile` to LF on every checkout.
+
 ### `ffmpeg not found` (no `comp.mp4` produced)
 
 `_stitch_comp_video` shells out to `ffmpeg`. The Dockerfile installs it via `apt-get install ffmpeg`, so this should never fire in the canonical image. If you're running `pipeline.py` on a host that doesn't have ffmpeg, `comp_mp4` outputs are silently skipped and you'll see `ffmpeg binary not found on PATH; skipping comp video` in the logs. `comp_preview_png_base64` and the zip outputs still work.

@@ -36,10 +36,26 @@ Legend: `[ ]` pending · `[~]` in-progress · `[x]` done · `[!]` blocked.
 
 ## M4 — Serverless deploy (sequential)
 
-- [~] **CK-13**  GHCR publish via GitHub Actions — workflow staged at `ci/docker-publish.yml.template` with manual inputs (`skip_model_prefetch`, `corridorkey_ref`). Blocked on OAuth `workflow` scope; the user or any session with `workflow` moves it to `.github/workflows/docker-publish.yml` and runs it in the UI. See `ci/README.md`.
+- [~] **CK-13**  GHCR publish via GitHub Actions — workflow staged at `ci/docker-publish.yml.template` with manual inputs (`skip_model_prefetch`, `corridorkey_ref`). Blocked on OAuth `workflow` scope; activate via `ci/README.md`. **Workaround used during M4:** built locally (`docker buildx build --platform linux/amd64 …`) and pushed to anonymous ttl.sh tag `ttl.sh/corridorkey-gercheg-984225:24h` — proves the Dockerfile is correct end-to-end on a real RunPod worker.
 - [x] **CK-14**  Template `corridorkey-worker-v1` → id `4we83sqxqn`. All 7 env vars attached (see `worker/deploy/endpoint.json`). Reusable via `worker/deploy/runpodctl_deploy.ps1`.
-- [x] **CK-15**  Endpoint `corridorkey-endpoint` → id `a72mhm1kdwsvoh` on RTX 4090 / EU-RO-1, workers min 0 / max 1.
-- [~] **CK-16**  `/run` smoke hit HTTP 200 (job `c6495e50…`); worker throttled + cancelled because image is not yet on GHCR. `/health` confirms REST plane is live. Will re-run automatically once the GHA publish lands.
+- [x] **CK-15**  Endpoint `corridorkey-endpoint` → id `a72mhm1kdwsvoh` on RTX 4090 / EU-RO-1, workers min 0 / max 2 (bumped from 1 to clear a hung unhealthy pod after the CRLF bug).
+- [x] **CK-16**  `/run` smoke **PASSED** end-to-end with the rebuilt image. Job `ea490cb0-ae8a-45ab-9deb-4fe0e8a47f87-e2`: cold image-pull 103 s, queue→exec 177.3 s, in-handler 29.35 s, output `comp_mp4` (h264 640×360 6 frames, 3369 B) + `comp_preview_png` (5398 B) decoded to `worker/deploy/smoke_out/`. Pure inference 5.485 s on RTX 4090.
 - [x] **CK-17**  User-facing runbook: `worker/deploy/DEPLOY.md` + scripted path `runpodctl_deploy.ps1` / `smoke_test.ps1`; main `worker/README.md` now links to both.
 
-**M4 infrastructure status:** template + endpoint + scripts + docs all complete. Only remaining dependency is activating the GHA workflow (requires the `workflow` OAuth scope that our token lacks) so the GHCR image exists and the throttled worker can pull it.
+**M4 status:** infrastructure complete and end-to-end verified against the live RunPod endpoint. The `ttl.sh` image expires ~2026-04-26 10:14 UTC; for permanent deployment activate the GHA workflow (`ci/README.md`) or push to your own registry per `worker/deploy/DEPLOY.md` and re-run `runpodctl template update 4we83sqxqn --image <tag>`.
+
+### Critical post-M3 bug discovered & fixed during M4
+
+**Symptom:** First two RunPod smoke jobs timed out in `IN_QUEUE`; worker entered `running=1` for ~60 s then flipped to `unhealthy=1` with empty `/stream` and `/status` payload.
+
+**Root cause:** `worker/start.sh` was checked out with Windows CRLF line endings on the developer machine. Inside the Linux container, `/usr/bin/env bash` interpreted the trailing `\r` as part of the executable name and crashed before the handler could even import:
+
+```
+/usr/bin/env: 'bash\r': No such file or directory
+```
+
+**Fixes (both committed):**
+- `worker/Dockerfile`: `RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh` after the `COPY start.sh` line — defends in depth even if the bug recurs.
+- `.gitattributes` at repo root: forces `*.sh`, `*.bash`, `Dockerfile`, `*.dockerfile` to LF on every checkout so it cannot recur.
+
+Verified locally with `docker run --rm -e SERVE_API_LOCALLY=true … <image>` (handler boots cleanly, FastAPI listens on :8000), then re-pushed (~10 s — only 2 small layers changed) and re-tested on RunPod (success documented above).

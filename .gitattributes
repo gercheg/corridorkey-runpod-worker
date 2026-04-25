@@ -1,0 +1,7 @@
+# Force LF line endings for shell scripts and Dockerfiles regardless of host OS.
+# Without this, a Windows checkout produces CRLF-terminated start.sh which then
+# crashes inside Linux containers with `/usr/bin/env: 'bash\r': No such file or directory`.
+*.sh        text eol=lf
+*.bash      text eol=lf
+Dockerfile  text eol=lf
+*.dockerfile text eol=lf

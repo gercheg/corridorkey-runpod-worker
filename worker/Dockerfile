@@ -118,7 +118,9 @@ COPY pipeline.py /app/pipeline.py
 COPY rp_handler.py /app/rp_handler.py
 COPY start.sh /app/start.sh
 COPY test_input.json /app/test_input.json
-RUN chmod +x /app/start.sh
+# Strip Windows CRLF from start.sh — without this the container exits with
+# `/usr/bin/env: 'bash\r': No such file or directory` on a Windows checkout.
+RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh
 
 WORKDIR ${CORRIDORKEY_ROOT}
 CMD ["/app/start.sh"]
